@@ -1,0 +1,19 @@
+kind: source
+name: my-pg-source
+type: postgres
+host: 127.0.0.1
+port: 5432
+database: toolbox_db
+user: postgres
+password: postgres
+---
+kind: tool
+name: search-users-by-name
+type: postgres-sql
+source: my-pg-source
+description: Search for users based on name.
+parameters:
+  - name: name
+    type: string
+    description: The name of the user.
+statement: SELECT * FROM users WHERE name ILIKE '%' || $1 || '%';
