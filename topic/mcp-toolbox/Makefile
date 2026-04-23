@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help sync lock run web lint fmt fix init-db clean
+.PHONY: help sync lock run web lint fmt fix init-db toolbox-postgres toolbox-sqlite clean
 
 help:
 	@echo "Available targets:"
@@ -12,6 +12,8 @@ help:
 	@echo "  make fmt    - Format code with Ruff"
 	@echo "  make fix    - Auto-fix + format"
 	@echo "  make init-db - Create sqlite db and users table"
+	@echo "  make toolbox-postgres - Start Toolbox server with postgres tools config"
+	@echo "  make toolbox-sqlite - Start Toolbox server with sqlite tools config"
 	@echo "  make clean  - Remove local caches"
 
 sync:
@@ -39,6 +41,12 @@ fix:
 init-db:
 	sqlite3 db/toolbox.db < db/create_users_table.sql
 	sqlite3 db/toolbox.db ".schema users"
+
+toolbox-postgres:
+	npx @toolbox-sdk/server --config mcp/postgres-tools.yaml
+
+toolbox-sqlite:
+	npx @toolbox-sdk/server --config mcp/sqlite-tools.yaml
 
 clean:
 	rm -rf .venv .ruff_cache

@@ -1,0 +1,11 @@
+kind: source
+name: my-sqlite-source
+type: sqlite
+database: ./db/toolbox.db
+---
+kind: tool
+name: list-all-users
+type: sqlite-sql
+source: my-sqlite-source
+description: List all users.
+statement: SELECT id, name FROM users ORDER BY id;

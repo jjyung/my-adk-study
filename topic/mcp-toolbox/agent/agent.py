@@ -9,7 +9,7 @@ load_dotenv(Path(__file__).with_name(".env"))
 
 toolbox = ToolboxToolset(
     server_url=os.getenv("TOOLBOX_SERVER_URL", "http://127.0.0.1:5000"),
-    toolset_name=os.getenv("TOOLBOX_TOOLSET", "demo-toolset"),
+    # toolset_name=os.getenv("TOOLBOX_TOOLSET", "demo-toolset"),
 )
 
 root_agent = Agent(
