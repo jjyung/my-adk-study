@@ -1,36 +1,70 @@
-import asyncio
+import argparse
 import os
+from pathlib import Path
+import sys
+
 from dotenv import load_dotenv
+from google.adk.cli.fast_api import get_fast_api_app
+import uvicorn
+
+BASE_DIR = Path(__file__).resolve().parent
+AGENTS_DIR = BASE_DIR / "agent"
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
 from session_factory import SessionFactory
 
-async def test_factory():
-    print("--- Testing InMemory ---")
-    os.environ["SESSION_MODE"] = "in_memory"
-    service1 = SessionFactory.create()
-    session1 = await service1.create_session(app_name="test_app", user_id="user_123")
-    print("Created InMemory Session ID:", session1.id)
-    retrieved1 = await service1.get_session(app_name="test_app", user_id="user_123", session_id=session1.id)
-    print("Get user_123 session:", retrieved1.id if retrieved1 else None)
+# Load env from topic/session/.env
+load_dotenv(BASE_DIR / ".env")
 
-    print("\n--- Testing Database ---")
-    os.environ["SESSION_MODE"] = "database"
-    service2 = SessionFactory.create()
-    session2 = await service2.create_session(app_name="test_app", user_id="user_456")
-    print("Created Database Session ID:", session2.id)
-    retrieved2 = await service2.get_session(app_name="test_app", user_id="user_456", session_id=session2.id)
-    print("Get user_456 session:", retrieved2.id if retrieved2 else None)
+# Keep compatibility with PROJECT_ID / LOCATION naming in current .env.
+if os.getenv("PROJECT_ID") and not os.getenv("GOOGLE_CLOUD_PROJECT"):
+    os.environ["GOOGLE_CLOUD_PROJECT"] = os.environ["PROJECT_ID"]
+if os.getenv("LOCATION") and not os.getenv("GOOGLE_CLOUD_LOCATION"):
+    os.environ["GOOGLE_CLOUD_LOCATION"] = os.environ["LOCATION"]
 
-    print("\n--- Testing Vertex AI ---")
-    os.environ["SESSION_MODE"] = "vertex_ai"
-    try:
-        service3 = SessionFactory.create()
-        print("VertexAiSessionService successfully created.")
-    except Exception as e:
-        # Catch exceptions if environment isn't fully set up for GCP auth
-        print(f"VertexAiSessionService initialization error: {e}")
+
+def build_app():
+    session_service_uri = SessionFactory.create_session_service_uri()
+    return get_fast_api_app(
+        agents_dir=str(AGENTS_DIR),
+        session_service_uri=session_service_uri,
+        web=False,
+    )
+
+
+fast_api_app = build_app()
+# Backward compatibility for existing `uvicorn main:app` usage.
+app = fast_api_app
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Session FastAPI entrypoint")
+    subparsers = parser.add_subparsers(dest="command")
+
+    run_parser = subparsers.add_parser("run", help="Run FastAPI server")
+    run_parser.add_argument("--host", default=os.getenv("HOST", "127.0.0.1"))
+    run_parser.add_argument("--port", type=int, default=int(os.getenv("PORT", "8000")))
+    run_parser.add_argument("--reload", action="store_true", help="Enable auto-reload")
+
+    args = parser.parse_args()
+    if args.command is None:
+        args.command = "run"
+    return args
+
+
+def main() -> int:
+    args = parse_args()
+    if args.command == "run":
+        uvicorn.run(
+            "main:fast_api_app",
+            host=args.host,
+            port=args.port,
+            reload=args.reload,
+        )
+        return 0
+    return 1
+
 
 if __name__ == "__main__":
-    # Load .env variables initially
-    load_dotenv()
-    asyncio.run(test_factory())
+    raise SystemExit(main())

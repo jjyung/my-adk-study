@@ -33,3 +33,36 @@ class SessionFactory:
             
         else:
             raise ValueError(f"Unknown session mode: {mode}")
+
+    @staticmethod
+    def create_session_service_uri(mode: str | None = None) -> str:
+        """
+        Creates a session service URI for `google.adk.cli.fast_api.get_fast_api_app`.
+        """
+        mode = mode or os.getenv("SESSION_MODE", "in_memory").lower()
+        uri: str
+
+        if mode == "in_memory":
+            uri = "memory://"
+            return uri
+
+        if mode == "database":
+            db_url = os.getenv("DB_URL")
+            if not db_url:
+                raise ValueError("DB_URL must be set in .env for database mode.")
+            uri = db_url
+            return uri
+
+        if mode == "vertex_ai":
+            # ADK fast api uses `agentengine://` URI to initialize VertexAiSessionService.
+            agent_engine_id = os.getenv("AGENT_ENGINE_ID")
+            agent_engine_resource = os.getenv("AGENT_ENGINE_RESOURCE_NAME")
+            uri_part = agent_engine_resource or agent_engine_id
+            if not uri_part:
+                raise ValueError(
+                    "AGENT_ENGINE_ID or AGENT_ENGINE_RESOURCE_NAME must be set in .env for vertex_ai mode."
+                )
+            uri = f"agentengine://{uri_part}"
+            return uri
+
+        raise ValueError(f"Unknown session mode: {mode}")
