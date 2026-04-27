@@ -36,7 +36,7 @@ web:
 	$(UV) run $(PY_DEPS) adk web .
 
 check:
-	$(UV) run $(PY_DEPS) python -m py_compile main.py session_factory.py
+	$(UV) run $(PY_DEPS) python -m py_compile main.py session_factory.py agent/agent.py
 
 k8000:
 	@pids="$$(lsof -ti tcp:8000 -sTCP:LISTEN 2>/dev/null)"; \
