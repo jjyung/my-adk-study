@@ -1,12 +1,15 @@
 from google.adk.agents.llm_agent import Agent
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models import LlmResponse, LlmRequest
+from google.adk.tools import FunctionTool, BaseTool, ToolContext
 from google.genai import types
-from typing import Optional
+from typing import Optional, Dict, Any
+from datetime import datetime
 
 # 範例關鍵字清單 (小寫以便比對)
 FORBIDDEN_KEYWORDS = ["secret", "confidential", "forbidden", "password"]
 
+# ===== [Pattern 1: Dynamic State Management] =====
 def manage_user_state(callback_context: CallbackContext) -> Optional[types.Content]:
     """獲取使用者資訊並寫入 Session State"""
     print("[State Management] Loading user info into state...")
@@ -16,6 +19,7 @@ def manage_user_state(callback_context: CallbackContext) -> Optional[types.Conte
     
     return None
 
+# ===== [Pattern 2: Guardrails & Context Injector] =====
 def keyword_guardrail_and_context_injector(
     callback_context: CallbackContext, llm_request: LlmRequest
 ) -> Optional[LlmResponse]:
@@ -63,11 +67,36 @@ def keyword_guardrail_and_context_injector(
 
     return None
 
+# ===== [Pattern 3: Logging and Monitoring (Tool)] =====
+def get_current_time() -> str:
+    """Get the current system date and time. Use this when the user asks for the current time."""
+    now = datetime.now()
+    return now.strftime("%Y-%m-%d %H:%M:%S")
+
+# 在 Python 版 ADK 中，FunctionTool 直接傳入 callable 即可，不使用 name 與 description 參數（會自動從函式 docstring 抓取）
+get_current_time_tool = FunctionTool(get_current_time)
+
+def tool_logger(
+    tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext, tool_response: Dict
+) -> Optional[Dict]:
+    """Logs the execution details of any tool called by the agent."""
+    agent_name = tool_context.agent_name
+    tool_name = tool.name
+    print(f"\n[Tool Logger] Agent '{agent_name}' finished executing tool: '{tool_name}'")
+    print(f"[Tool Logger] Arguments used: {args}")
+    print(f"[Tool Logger] Tool Response: {tool_response}\n")
+    
+    # 回傳 None 表示不修改原始的 response
+    return None
+
+# ===== [Agent Definition] =====
 root_agent = Agent(
     model='gemini-2.5-flash',
     name='root_agent',
     description='A helpful assistant for user questions.',
     instruction='Answer user questions to the best of your knowledge',
     before_agent_callback=manage_user_state,
-    before_model_callback=keyword_guardrail_and_context_injector
+    before_model_callback=keyword_guardrail_and_context_injector,
+    tools=[get_current_time_tool],
+    after_tool_callback=tool_logger
 )
