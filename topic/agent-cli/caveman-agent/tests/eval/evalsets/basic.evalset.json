@@ -1,0 +1,64 @@
+{
+  "eval_set_id": "caveman_compression_eval",
+  "name": "Caveman Compression Evaluation",
+  "description": "Evaluates terse, accurate compression of verbose technical text.",
+  "eval_cases": [
+    {
+      "eval_id": "retry_backoff_batch",
+      "conversation": [
+        {
+          "user_content": {
+            "parts": [
+              {
+                "text": "Compress this: Our distributed ingestion service is currently experiencing intermittent latency spikes due to unbounded retries and oversized payload batching, so we should cap retries, introduce jittered exponential backoff, and enforce batch-size limits before the next release."
+              }
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "app",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "k8s_rollout_constraints",
+      "conversation": [
+        {
+          "user_content": {
+            "parts": [
+              {
+                "text": "Compress this into caveman technical notes: During Kubernetes rollout, p95 latency rose from 220ms to 540ms after enabling synchronous audit logging on every request. Keep the same facts and numbers. Do not suggest rollback yet; first gate logging by endpoint and sample non-critical traffic."
+              }
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "app",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "cli_and_path_preservation",
+      "conversation": [
+        {
+          "user_content": {
+            "parts": [
+              {
+                "text": "Compress this and preserve exact command/path tokens: We need to run `uv run pytest tests/unit -q` before merging and inspect failures in `/srv/app/logs/worker.log` because yesterday's patch changed retry behavior in the payment worker."
+              }
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "app",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    }
+  ]
+}

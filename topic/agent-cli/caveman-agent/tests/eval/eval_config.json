@@ -1,0 +1,31 @@
+{
+  "criteria": {
+    "rubric_based_final_response_quality_v1": {
+      "threshold": 0.8,
+      "judgeModelOptions": {
+        "judgeModel": "gemini-flash-latest",
+        "numSamples": 1
+      },
+      "rubrics": [
+        {
+          "rubricId": "terse_caveman_style",
+          "rubricContent": {
+            "textProperty": "Response is concise and uses blunt caveman-style technical phrasing with minimal filler."
+          }
+        },
+        {
+          "rubricId": "technical_faithfulness",
+          "rubricContent": {
+            "textProperty": "Response preserves the key technical facts, constraints, and causal relationships from the input without introducing new facts."
+          }
+        },
+        {
+          "rubricId": "token_preservation",
+          "rubricContent": {
+            "textProperty": "When the input contains concrete commands, file paths, APIs, or numeric values, the response preserves them exactly or with lossless equivalence."
+          }
+        }
+      ]
+    }
+  }
+}

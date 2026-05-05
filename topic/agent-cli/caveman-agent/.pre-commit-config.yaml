@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: block-terraform-sensitive-files
+        name: Block Terraform sensitive files
+        entry: bash -c 'files=$(git diff --cached --name-only); if [ -n "$files" ] && printf "%s\n" "$files" | grep -E "(^|/)terraform\.tfstate(\..*)?$|\.tfvars(\.json)?$|(^|/)override\.tf(\.json)?$|(^|/).+_override\.tf(\.json)?$|(^|/)crash\.log$" >/dev/null; then echo "Error: Terraform sensitive/local files detected in staged changes."; echo "Blocked patterns: *.tfstate, *.tfstate.*, *.tfvars, *.tfvars.json, override.tf*, *_override.tf*, crash.log"; exit 1; fi'
+        language: system
+        pass_filenames: false
