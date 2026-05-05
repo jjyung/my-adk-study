@@ -82,6 +82,44 @@ agents-cli deploy
 To add CI/CD and Terraform, run `agents-cli scaffold enhance`.
 To set up your production infrastructure, run `agents-cli infra cicd`.
 
+### Manual Terraform (Create / Destroy)
+
+If you want to manage infra manually with Terraform (single-project mode):
+
+1) Prepare tfvars from example
+
+```bash
+cp deployment/terraform/single-project/vars/env.tfvars.example deployment/terraform/single-project/vars/env.tfvars
+```
+
+2) Edit `deployment/terraform/single-project/vars/env.tfvars` and set:
+- `project_id`
+- `region` (for example `asia-east1`)
+
+3) Create infrastructure
+
+```bash
+terraform -chdir=deployment/terraform/single-project init
+terraform -chdir=deployment/terraform/single-project plan -var-file=vars/env.tfvars
+terraform -chdir=deployment/terraform/single-project apply -var-file=vars/env.tfvars
+```
+
+4) Deploy app code to Cloud Run
+
+```bash
+agents-cli deploy --project <your-project-id> --region <your-region> --no-confirm-project
+```
+
+5) Destroy infrastructure (when done)
+
+```bash
+terraform -chdir=deployment/terraform/single-project destroy -var-file=vars/env.tfvars
+```
+
+Notes:
+- `.tfstate` and `.tfvars` are gitignored to avoid committing local/sensitive Terraform files.
+- Keep `*.example` files in git as templates, and use local `env.tfvars` for real values.
+
 ## Observability
 
 Built-in telemetry exports to Cloud Trace, BigQuery, and Cloud Logging.
